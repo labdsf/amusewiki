@@ -1,6 +1,6 @@
 package AmuseWikiFarm::Middleware::ETag;
 
-our VERSION = '0.05';
+our $VERSION = '0.01';
 
 use strict;
 use warnings;
