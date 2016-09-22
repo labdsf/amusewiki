@@ -148,7 +148,7 @@ __PACKAGE__->config(
     psgi_middleware => [
         'XSendfile',
         'ConditionalGET',
-        ETag => {
+        '+AmuseWikiFarm::Middleware::ETag' => {
             check_last_modified_header => 0,
             cache_control => [ 'must-revalidate', 'max-age=3600' ],
             file_etag => [qw/inode mtime size/],
