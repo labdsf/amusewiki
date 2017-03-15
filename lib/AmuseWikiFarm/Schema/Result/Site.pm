@@ -631,6 +631,21 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 galleries
+
+Type: has_many
+
+Related object: L<AmuseWikiFarm::Schema::Result::Gallery>
+
+=cut
+
+__PACKAGE__->has_many(
+  "galleries",
+  "AmuseWikiFarm::Schema::Result::Gallery",
+  { "foreign.site_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 jobs
 
 Type: has_many
@@ -807,8 +822,8 @@ Composing rels: L</user_sites> -> user
 __PACKAGE__->many_to_many("users", "user_sites", "user");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2017-02-17 19:36:30
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:uN3U76GhYOYoD6AYdilPVA
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2017-03-15 09:37:26
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:itPWZDG45ejCO1wT40S1qg
 
 =head2 other_sites
 

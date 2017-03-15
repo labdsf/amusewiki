@@ -95,6 +95,22 @@ __PACKAGE__->table("attachment");
   is_nullable: 0
   size: 255
 
+=head2 title
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 255
+
+=head2 muse_desc
+
+  data_type: 'text'
+  is_nullable: 1
+
+=head2 html_desc
+
+  data_type: 'text'
+  is_nullable: 1
+
 =head2 site_id
 
   data_type: 'varchar'
@@ -125,6 +141,12 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 0, size => 16 },
   "uri",
   { data_type => "varchar", is_nullable => 0, size => 255 },
+  "title",
+  { data_type => "varchar", is_nullable => 1, size => 255 },
+  "muse_desc",
+  { data_type => "text", is_nullable => 1 },
+  "html_desc",
+  { data_type => "text", is_nullable => 1 },
   "site_id",
   { data_type => "varchar", is_foreign_key => 1, is_nullable => 0, size => 16 },
 );
@@ -159,6 +181,21 @@ __PACKAGE__->add_unique_constraint("uri_site_id_unique", ["uri", "site_id"]);
 
 =head1 RELATIONS
 
+=head2 gallery_attachments
+
+Type: has_many
+
+Related object: L<AmuseWikiFarm::Schema::Result::GalleryAttachment>
+
+=cut
+
+__PACKAGE__->has_many(
+  "gallery_attachments",
+  "AmuseWikiFarm::Schema::Result::GalleryAttachment",
+  { "foreign.attachment_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 site
 
 Type: belongs_to
@@ -174,9 +211,19 @@ __PACKAGE__->belongs_to(
   { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
+=head2 galleries
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2017-02-17 19:36:30
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7vs82ij5xHPQBjuRAr0wCA
+Type: many_to_many
+
+Composing rels: L</gallery_attachments> -> gallery
+
+=cut
+
+__PACKAGE__->many_to_many("galleries", "gallery_attachments", "gallery");
+
+
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2017-03-15 09:37:27
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:cvTj/7NJqx8gfF/FjztAkw
 
 =head2 File classes
 
