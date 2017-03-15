@@ -357,11 +357,35 @@ CREATE TABLE attachment (
        f_suffix    VARCHAR(16) NOT NULL,
        f_class     VARCHAR(16) NOT NULL,
        uri   VARCHAR(255) NOT NULL,
+       title VARCHAR(255),
+       muse_desc TEXT,
+       html_desc TEXT,
        site_id VARCHAR(16) NOT NULL REFERENCES site(id)
                                 ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE UNIQUE INDEX unique_attachment ON attachment (uri, site_id);
+
+CREATE TABLE gallery (
+       gallery_id INTEGER PRIMARY KEY,
+       site_id VARCHAR(16) NOT NULL REFERENCES site(id)
+                                ON DELETE CASCADE ON UPDATE CASCADE,
+       title VARCHAR(255) NOT NULL,
+       uri   VARCHAR(255) NOT NULL,
+       muse_desc TEXT,
+       html_desc TEXT,
+       last_modified DATETIME
+);
+
+CREATE UNIQUE INDEX unique_gallery ON gallery (uri, site_id);
+
+CREATE TABLE gallery_attachment (
+       gallery_id INTEGER NOT NULL REFERENCES gallery(gallery_id)
+                                   ON DELETE CASCADE ON UPDATE CASCADE,
+       attachment_id INTEGER NOT NULL REFERENCES attachment(id)
+                                      ON DELETE CASCADE ON UPDATE CASCADE,
+       PRIMARY KEY(gallery_id, attachment_id)
+);
 
 CREATE TABLE site_link (
        url VARCHAR(255) NOT NULL,
