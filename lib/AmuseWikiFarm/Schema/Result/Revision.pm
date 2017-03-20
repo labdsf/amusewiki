@@ -530,59 +530,8 @@ if (my $error = $revision->add_attachment($file)->{error}) {
 sub add_attachment {
     my ($self, $filename) = @_;
     die "Missing argument" unless $filename;
-    # PO:
-    # loc("[_1] doesn't exist", $filename);
-    my %out;
-    unless (-f $filename) {
-        $out{error} = [ "[_1] doesn't exist", $filename ];
-        return \%out;
-    }
-    my $mime = mimetype($filename) || "";
-    my $ext;
-    if ($mime eq 'image/jpeg') {
-        $ext = '.jpg';
-    }
-    elsif ($mime eq 'image/png') {
-        $ext = '.png';
-    }
-    elsif ($mime eq 'application/pdf') {
-        $ext = '.pdf';
-    }
-    else {
-        # PO:
-        # loc("Unsupported file type [_1]", $mime);
-        $out{error} = [ "Unsupported file type [_1]", $mime ];
-        return \%out;
-    }
     my $base = muse_attachment_basename_for($self->muse_uri);
-    my $suffix = 0;
-    # and now we have to check if the same name exists in the
-    # attachment table for the same site.
-    my $name;
-    do {
-        $name = $base . '-' . ++$suffix . $ext;
-    } while ($self->site->attachments->find({ uri => $name }));
-
-    die "Something went wrong" unless $name;
-
-    # copy it in the working directory
-    my $target = File::Spec->catfile($self->working_dir, $name);
-    copy($filename, $target) or die "Couldn't copy $filename to $target $!";
-
-    # and finally insert the thing in the db
-    my $info = muse_parse_file_path($target, $self->working_dir, 1);
-    die "Couldn't retrieve info from $target (this shouldn't happen)" unless $info;
-
-    $info->{uri} = $info->{f_name} . $info->{f_suffix};
-
-    # I think we will update this later, attachment uri are unique across
-    # the site, so we can set it to a bogus value
-    $info->{f_class} = 'attachment';
-
-    # and let it crash on race conditions
-    $self->site->attachments->create($info);
-    $out{attachment} = $info->{uri};
-    return \%out;
+    return $self->site->create_attachment($filename, $self->working_dir, $base);
 }
 
 =head2 destination_paths

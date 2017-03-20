@@ -26,8 +26,17 @@ my $mech = Test::WWW::Mechanize::Catalyst->new(catalyst_app => 'AmuseWikiFarm',
 my $gallery = $site->galleries->create({ gallery_uri => 'test',
                                          title => 'test',
                                        });
-ok is $gallery->site_id, $site->id;
+is $gallery->site_id, $site->id;
 
+is $gallery->site->id, $site->id;
 
+ok $site->upload_staging_dir;
 
+my %staged;
+foreach my $ext (qw/jpg pdf png/) {
+    my $out = $site->stage_attachment(catfile(qw/t files shot/) . '.' . $ext);
+    $staged{$out->{attachment}} = 1;
+}
+diag Dumper(\%staged);
+is scalar(keys %staged), 3;
 

@@ -856,6 +856,7 @@ use Text::Amuse::Compile;
 use Date::Parse;
 use DateTime;
 use File::Copy qw/copy/;
+use Path::Tiny;
 use AmuseWikiFarm::Archive::Xapian;
 use Unicode::Collate::Locale;
 use File::Find;
@@ -866,6 +867,7 @@ use AmuseWikiFarm::Log::Contextual;
 use AmuseWikiFarm::Utils::CgitSetup;
 use AmuseWikiFarm::Utils::LexiconMigration;
 use Regexp::Common qw/net/;
+use File::MimeInfo::Magic ();
 
 =head2 repo_root_rel
 
@@ -1173,6 +1175,11 @@ sub staging_dirname {
 sub staging_dir {
     my $self = shift;
     return File::Spec->catdir(getcwd(), $self->staging_dirname);
+}
+
+sub upload_staging_dir {
+    my $self = shift;
+    return File::Spec->catdir($self->staging_dir, staging_uploads => $self->id);
 }
 
 =head2 create_new_text(\%params, $f_class)
@@ -3287,6 +3294,78 @@ sub active_custom_formats {
     return \@all;
 }
 
+sub stage_attachment {
+    my ($self, $file, $provided_name) = @_;
+    # here we receive request->tempfile and request->filename
+    die "No such file $file" unless ($file && -f $file);
+    my $base = muse_naming_algo($provided_name || 'upload');
+    my $wd = path($self->upload_staging_dir);
+    $wd->mkpath;
+    $self->create_attachment($file, "$wd", $base);
+}
+
+sub create_attachment {
+    my ($self, $filename, $target_dir, $base) = @_;
+    my %out;
+    # PO:
+    # loc("[_1] doesn't exist", $filename);
+    unless (-f $filename) {
+        $out{error} = [ "[_1] doesn't exist", $filename ];
+        return \%out;
+    }
+    unless ($target_dir and -d $target_dir) {
+        $out{error} = [ "[_1] doesn't exist", $target_dir ];
+        return \%out;
+    }
+    $base ||= 'upload';
+    my $mime = File::MimeInfo::Magic::mimetype($filename) || "";
+    my $ext;
+    if ($mime eq 'image/jpeg') {
+        $ext = '.jpg';
+    }
+    elsif ($mime eq 'image/png') {
+        $ext = '.png';
+    }
+    elsif ($mime eq 'application/pdf') {
+        $ext = '.pdf';
+    }
+    else {
+        # PO:
+        # loc("Unsupported file type [_1]", $mime);
+        $out{error} = [ "Unsupported file type [_1]", $mime ];
+        return \%out;
+    }
+    my $suffix = 0;
+    # and now we have to check if the same name exists in the
+    # attachment table for the same site.
+    my ($name, $newbase);
+    do {
+        $newbase = $base . '-' . ++$suffix;
+        $name = $newbase . $ext;
+    } while ($self->attachments->find({ uri => $name })
+             or $self->titles->find({ uri => $newbase }));
+    die "Something went wrong" unless $name;
+
+    # copy to target directory
+    my $target = File::Spec->catfile($target_dir, $name);
+    copy($filename, $target) or die "Couldn't copy $filename to $target $!";
+
+    # and finally insert the thing in the db
+    my $info = AmuseWikiFarm::Utils::Amuse::muse_parse_file_path($target, $target_dir, 1);
+    die "Couldn't retrieve info from $target (this shouldn't happen)" unless $info;
+
+    $info->{uri} = $info->{f_name} . $info->{f_suffix};
+
+    # I think we will update this later, attachment uri are unique across
+    # the site, so we can set it to a bogus value
+    $info->{f_class} = 'attachment';
+
+    # and let it crash on race conditions
+    my $attachment = $self->attachments->create($info);
+    $out{attachment} = $info->{uri};
+    $out{object} = $attachment;
+    return \%out;
+}
 
 __PACKAGE__->meta->make_immutable;
 
