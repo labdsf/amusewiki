@@ -371,13 +371,13 @@ CREATE TABLE gallery (
        site_id VARCHAR(16) NOT NULL REFERENCES site(id)
                                 ON DELETE CASCADE ON UPDATE CASCADE,
        title VARCHAR(255) NOT NULL,
-       uri   VARCHAR(255) NOT NULL,
+       gallery_uri   VARCHAR(255) NOT NULL,
        muse_desc TEXT,
        html_desc TEXT,
        last_modified DATETIME
 );
 
-CREATE UNIQUE INDEX unique_gallery ON gallery (uri, site_id);
+CREATE UNIQUE INDEX unique_gallery ON gallery (gallery_uri, site_id);
 
 CREATE TABLE gallery_attachment (
        gallery_id INTEGER NOT NULL REFERENCES gallery(gallery_id)

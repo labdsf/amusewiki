@@ -57,7 +57,7 @@ __PACKAGE__->table("gallery");
   is_nullable: 0
   size: 255
 
-=head2 uri
+=head2 gallery_uri
 
   data_type: 'varchar'
   is_nullable: 0
@@ -87,7 +87,7 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_foreign_key => 1, is_nullable => 0, size => 16 },
   "title",
   { data_type => "varchar", is_nullable => 0, size => 255 },
-  "uri",
+  "gallery_uri",
   { data_type => "varchar", is_nullable => 0, size => 255 },
   "muse_desc",
   { data_type => "text", is_nullable => 1 },
@@ -111,11 +111,11 @@ __PACKAGE__->set_primary_key("gallery_id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<uri_site_id_unique>
+=head2 C<gallery_uri_site_id_unique>
 
 =over 4
 
-=item * L</uri>
+=item * L</gallery_uri>
 
 =item * L</site_id>
 
@@ -123,7 +123,7 @@ __PACKAGE__->set_primary_key("gallery_id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("uri_site_id_unique", ["uri", "site_id"]);
+__PACKAGE__->add_unique_constraint("gallery_uri_site_id_unique", ["gallery_uri", "site_id"]);
 
 =head1 RELATIONS
 
@@ -168,8 +168,8 @@ Composing rels: L</gallery_attachments> -> attachment
 __PACKAGE__->many_to_many("attachments", "gallery_attachments", "attachment");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2017-03-15 09:37:27
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:nMOSK2SExkcIFcVxp62x4A
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2017-03-20 10:38:30
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:9EAOWXNrkhxOIktCwYLCOw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
