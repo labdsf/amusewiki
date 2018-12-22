@@ -18,7 +18,7 @@ use Getopt::Long;
 use Crypt::XkcdPassword;
 use Pod::Usage;
 
-my ($hostname, $mail_notify, $help);
+my ($hostname, $mail_notify, $stub, $help);
 my $site_id = 'amw';
 my $password = Crypt::XkcdPassword->new(words => 'IT')->make_password(5, qr{\A[0-9a-zA-Z]{3,}\z});
 my $username = "amusewiki";
@@ -28,6 +28,7 @@ GetOptions(
            'username=s' => \$username,
            'password=s' => \$password,
            'email=s' => \$mail_notify,
+           stub => \$stub,
            help => \$help,
           ) or die;
 
@@ -40,7 +41,7 @@ amusewiki-create-doc-site - create an amusewiki sample site and archive
   amusewiki-create-doc-site
 
 Try to clone the repository of amusewiki.org, creating an initial site
-with with documentation and a root user as well, so you are able to
+with documentation and a root user as well, so you are able to
 login and create new sites/users from there.
 
 It needs to be called from the application root directory, from where
@@ -70,6 +71,10 @@ The root user's password. Automatically generated if not provided.
 =item --email
 
 Optional (without it, no notification are sent on this site)
+
+=item --stub
+
+Initialize stub repository instead of cloning amusewiki.org
 
 =back
 
@@ -161,13 +166,15 @@ $site->discard_changes;
 my $repo_root = $site->repo_root;
 
 unless (-d $repo_root) {
-    if ((system(git => clone => "git://amusewiki.org/git/amw.git" => $site->repo_root) == 0) or
-        (system(git => clone => "https://github.com/melmothx/amusewiki-site.git" => $site->repo_root) == 0)) {
+    if (!$stub and
+        ((system(git => clone => "git://amusewiki.org/git/amw.git" => $site->repo_root) == 0) or
+         (system(git => clone => "https://github.com/melmothx/amusewiki-site.git" => $site->repo_root) == 0))) {
         print "Repository with the official documentation has been created at " . $site->repo_root . "\n";
         $site->configure_cgit;
     }
     elsif ($site->initialize_git) {
         print "An stub repository has been created at " . $site->repo_root . "\n";
+        # $site->configure_cgit; FIXME should configure cgit?
     }
     else {
         die "This shouldn't happen";
